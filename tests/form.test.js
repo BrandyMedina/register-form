@@ -27,6 +27,8 @@ describe('Story 1: registration form with name and email', () => {
     document.getElementById('email').value = 'ana@example.com';
     document.getElementById('password').value = 'abc12345';
     document.getElementById('confirm-password').value = 'abc12345';
+    document.getElementById('address').value = '12 Main Street';
+    document.getElementById('country').value = 'Spain';
     document.getElementById('registration-form')
       .dispatchEvent(new Event('submit', { cancelable: true }));
     const msg = document.getElementById('success-message');
@@ -49,6 +51,8 @@ describe('Story 2: validation of name and email', () => {
     document.getElementById('email').value = email;
     document.getElementById('password').value = password;
     document.getElementById('confirm-password').value = confirm;
+    document.getElementById('address').value = '12 Main Street';
+    document.getElementById('country').value = 'Spain';
     document.getElementById('registration-form')
       .dispatchEvent(new Event('submit', { cancelable: true }));
   }
@@ -125,6 +129,8 @@ describe('Story 3: password and confirm password', () => {
     document.getElementById('email').value = email;
     document.getElementById('password').value = password;
     document.getElementById('confirm-password').value = confirm;
+    document.getElementById('address').value = '12 Main Street';
+    document.getElementById('country').value = 'Spain';
     document.getElementById('registration-form')
       .dispatchEvent(new Event('submit', { cancelable: true }));
   }
@@ -206,5 +212,99 @@ describe('Story 3: password and confirm password', () => {
 
   test('toggle buttons do not submit the form', () => {
     expect(document.querySelector('button[data-toggle="password"]').type).toBe('button');
+  });
+});
+
+describe('Story 4: phone, address and country', () => {
+  beforeEach(loadPage);
+
+  function submit({ phone = '', address = '12 Main Street', country = 'Spain' } = {}) {
+    document.getElementById('name').value = 'Ana';
+    document.getElementById('email').value = 'ana@example.com';
+    document.getElementById('password').value = 'abc12345';
+    document.getElementById('confirm-password').value = 'abc12345';
+    document.getElementById('phone').value = phone;
+    document.getElementById('address').value = address;
+    document.getElementById('country').value = country;
+    document.getElementById('registration-form')
+      .dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+  const err = (id) => document.getElementById(`${id}-error`);
+  const success = () => document.getElementById('success-message');
+
+  test('renders fields with the right types, autocomplete and labels', () => {
+    const phone = document.getElementById('phone');
+    expect(phone.type).toBe('tel');
+    expect(phone.getAttribute('autocomplete')).toBe('tel');
+    expect(document.querySelector('label[for="phone"]').textContent).toMatch(/optional/i);
+    const address = document.getElementById('address');
+    expect(address.tagName).toBe('INPUT');
+    expect(address.getAttribute('autocomplete')).toBe('street-address');
+    const country = document.getElementById('country');
+    expect(country.tagName).toBe('INPUT');
+    expect(country.getAttribute('autocomplete')).toBe('country-name');
+    expect(document.querySelector('label[for="address"]')).not.toBeNull();
+    expect(document.querySelector('label[for="country"]')).not.toBeNull();
+  });
+
+  test('empty phone is valid and does not block success', () => {
+    submit({ phone: '' });
+    expect(err('phone').hidden).toBe(true);
+    expect(success().hidden).toBe(false);
+  });
+
+  test.each(['+1 (555) 123-4567', '5551234', '555-123-4567'])(
+    'valid phone "%s" passes', (phone) => {
+      submit({ phone });
+      expect(err('phone').hidden).toBe(true);
+      expect(success().hidden).toBe(false);
+    });
+
+  test.each(['abc', '123', '1234567890123456', '555-CALL-NOW'])(
+    'invalid phone "%s" shows error', (phone) => {
+      submit({ phone });
+      expect(err('phone').textContent).toBe('Enter a valid phone number');
+      expect(document.getElementById('phone').getAttribute('aria-invalid')).toBe('true');
+      expect(success().hidden).toBe(true);
+    });
+
+  test.each(['', '    '])('empty/whitespace address "%s" shows required', (address) => {
+    submit({ address });
+    expect(err('address').textContent).toBe('Address is required');
+    expect(success().hidden).toBe(true);
+  });
+
+  test('short address shows minimum length error', () => {
+    submit({ address: '1 Av' });
+    expect(err('address').textContent).toBe('Address must be at least 5 characters');
+  });
+
+  test('valid address shows no error', () => {
+    submit({ address: '12345' });
+    expect(err('address').hidden).toBe(true);
+  });
+
+  test('empty country shows required', () => {
+    submit({ country: '  ' });
+    expect(err('country').textContent).toBe('Country is required');
+    expect(success().hidden).toBe(true);
+  });
+
+  test('1-character country shows minimum length error', () => {
+    submit({ country: 'X' });
+    expect(err('country').textContent).toBe('Country must be at least 2 characters');
+  });
+
+  test('aria-describedby links invalid fields to their errors', () => {
+    submit({ phone: 'abc', address: '', country: '' });
+    expect(document.getElementById('phone').getAttribute('aria-describedby')).toBe('phone-error');
+    expect(document.getElementById('address').getAttribute('aria-describedby')).toBe('address-error');
+    expect(document.getElementById('country').getAttribute('aria-describedby')).toBe('country-error');
+  });
+
+  test('all valid shows success with no errors', () => {
+    submit({ phone: '+34 600 123 456', address: '12 Main Street', country: 'Spain' });
+    expect(success().hidden).toBe(false);
+    for (const id of ['phone', 'address', 'country']) expect(err(id).hidden).toBe(true);
   });
 });

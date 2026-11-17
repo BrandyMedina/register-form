@@ -30,6 +30,31 @@ function validateConfirmPassword(password, confirm, passwordError) {
   return '';
 }
 
+// Optional: empty is valid. Otherwise allow digits, spaces, + - ( ) with 7-15 digits.
+function validatePhone(value) {
+  const phone = value.trim();
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '').length;
+  if (!/^[\d\s+\-()]+$/.test(phone) || digits < 7 || digits > 15) {
+    return 'Enter a valid phone number';
+  }
+  return '';
+}
+
+function validateAddress(value) {
+  const address = value.trim();
+  if (!address) return 'Address is required';
+  if (address.length < 5) return 'Address must be at least 5 characters';
+  return '';
+}
+
+function validateCountry(value) {
+  const country = value.trim();
+  if (!country) return 'Country is required';
+  if (country.length < 2) return 'Country must be at least 2 characters';
+  return '';
+}
+
 function showError(doc, id, message) {
   const input = doc.getElementById(id);
   const error = doc.getElementById(`${id}-error`);
@@ -57,12 +82,22 @@ function initForm(doc) {
       passwordError
     );
 
+    const phoneError = validatePhone(doc.getElementById('phone').value);
+    const addressError = validateAddress(doc.getElementById('address').value);
+    const countryError = validateCountry(doc.getElementById('country').value);
+
     showError(doc, 'name', nameError);
     showError(doc, 'email', emailError);
     showError(doc, 'password', passwordError);
     showError(doc, 'confirm-password', confirmError);
+    showError(doc, 'phone', phoneError);
+    showError(doc, 'address', addressError);
+    showError(doc, 'country', countryError);
 
-    success.hidden = Boolean(nameError || emailError || passwordError || confirmError);
+    success.hidden = Boolean(
+      nameError || emailError || passwordError || confirmError ||
+      phoneError || addressError || countryError
+    );
   });
 
   doc.querySelectorAll('button[data-toggle]').forEach((button) => {
@@ -79,6 +114,7 @@ function initForm(doc) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     initForm, validateName, validateEmail, validatePassword, validateConfirmPassword,
+    validatePhone, validateAddress, validateCountry,
   };
 } else {
   initForm(document);
