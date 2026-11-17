@@ -19,6 +19,18 @@
         <input id="email" name="email" type="email" autocomplete="email" aria-invalid="false">
         <p id="email-error" class="error" role="alert" hidden></p>
       </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" aria-invalid="false">
+        <button type="button" data-toggle="password" aria-pressed="false">Show</button>
+        <p id="password-error" class="error" role="alert" hidden></p>
+      </div>
+      <div>
+        <label for="confirm-password">Confirm password</label>
+        <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" aria-invalid="false">
+        <button type="button" data-toggle="confirm-password" aria-pressed="false">Show</button>
+        <p id="confirm-password-error" class="error" role="alert" hidden></p>
+      </div>
       <button type="submit">Register</button>
     </form>
     <p id="success-message" role="status" hidden>You have been registered successfully.</p>

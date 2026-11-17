@@ -14,6 +14,22 @@ function validateEmail(value) {
   return '';
 }
 
+function validatePassword(value) {
+  if (!value) return 'Password is required';
+  if (value.length < 8) return 'Password must be at least 8 characters';
+  if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    return 'Password must include a letter and a number';
+  }
+  return '';
+}
+
+// The mismatch error only applies once the password itself is valid.
+function validateConfirmPassword(password, confirm, passwordError) {
+  if (!confirm) return 'Please confirm your password';
+  if (!passwordError && confirm !== password) return 'Passwords do not match';
+  return '';
+}
+
 function showError(doc, id, message) {
   const input = doc.getElementById(id);
   const error = doc.getElementById(`${id}-error`);
@@ -33,15 +49,37 @@ function initForm(doc) {
 
     const nameError = validateName(doc.getElementById('name').value);
     const emailError = validateEmail(doc.getElementById('email').value);
+    const password = doc.getElementById('password').value;
+    const passwordError = validatePassword(password);
+    const confirmError = validateConfirmPassword(
+      password,
+      doc.getElementById('confirm-password').value,
+      passwordError
+    );
+
     showError(doc, 'name', nameError);
     showError(doc, 'email', emailError);
+    showError(doc, 'password', passwordError);
+    showError(doc, 'confirm-password', confirmError);
 
-    success.hidden = Boolean(nameError || emailError);
+    success.hidden = Boolean(nameError || emailError || passwordError || confirmError);
+  });
+
+  doc.querySelectorAll('button[data-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = doc.getElementById(button.dataset.toggle);
+      const reveal = input.type === 'password';
+      input.type = reveal ? 'text' : 'password';
+      button.textContent = reveal ? 'Hide' : 'Show';
+      button.setAttribute('aria-pressed', String(reveal));
+    });
   });
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initForm, validateName, validateEmail };
+  module.exports = {
+    initForm, validateName, validateEmail, validatePassword, validateConfirmPassword,
+  };
 } else {
   initForm(document);
 }
