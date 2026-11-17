@@ -1,0 +1,16 @@
+{
+  "name": "formulario-de-registro",
+  "version": "0.1.0",
+  "description": "Frontend-only user registration form",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2"
+  }
+}
