@@ -114,11 +114,6 @@ describe('Story 2: validation of name and email', () => {
     expect(success().hidden).toBe(false);
   });
 
-  test('success message hides again if a later submit is invalid', () => {
-    submit({ name: 'Ana', email: 'ana@example.com' });
-    submit({ name: 'Ana', email: '' });
-    expect(success().hidden).toBe(true);
-  });
 });
 
 describe('Story 3: password and confirm password', () => {
@@ -306,5 +301,129 @@ describe('Story 4: phone, address and country', () => {
     submit({ phone: '+34 600 123 456', address: '12 Main Street', country: 'Spain' });
     expect(success().hidden).toBe(false);
     for (const id of ['phone', 'address', 'country']) expect(err(id).hidden).toBe(true);
+  });
+});
+
+describe('Story 5: submit experience', () => {
+  beforeEach(loadPage);
+
+  const VALID = {
+    name: 'Ana', email: 'ana@example.com', password: 'abc12345',
+    'confirm-password': 'abc12345', phone: '', address: '12 Main Street', country: 'Spain',
+  };
+  const form = () => document.getElementById('registration-form');
+  const success = () => document.getElementById('success-message');
+  const summary = () => document.getElementById('error-summary');
+  const err = (id) => document.getElementById(`${id}-error`);
+
+  function fill(values) {
+    for (const [id, value] of Object.entries({ ...VALID, ...values })) {
+      document.getElementById(id).value = value;
+    }
+  }
+  function submit(values = {}) {
+    fill(values);
+    form().dispatchEvent(new Event('submit', { cancelable: true }));
+  }
+
+  test('summary is hidden initially', () => {
+    expect(summary().hidden).toBe(true);
+  });
+
+  test('invalid submit focuses the first invalid field in form order', () => {
+    submit({ email: 'nope', country: '' });
+    expect(document.activeElement.id).toBe('email');
+    submit({ country: '' });
+    expect(document.activeElement.id).toBe('country');
+  });
+
+  test('summary shows the number of invalid fields (plural)', () => {
+    submit({ name: '', email: 'nope', address: '' });
+    expect(summary().hidden).toBe(false);
+    expect(summary().textContent).toBe('Please fix 3 fields below');
+  });
+
+  test('summary uses singular for one invalid field', () => {
+    submit({ country: '' });
+    expect(summary().textContent).toBe('Please fix 1 field below');
+  });
+
+  test('valid submit hides the summary, hides the form and shows generic success', () => {
+    submit({ country: '' });
+    submit();
+    expect(summary().hidden).toBe(true);
+    expect(form().hidden).toBe(true);
+    expect(success().hidden).toBe(false);
+    expect(success().textContent).toBe('You have been registered successfully.');
+    expect(success().textContent).not.toMatch(/Ana/);
+  });
+
+  test('password values are cleared after success', () => {
+    submit();
+    expect(document.getElementById('password').value).toBe('');
+    expect(document.getElementById('confirm-password').value).toBe('');
+  });
+
+  test('a second submit after success does nothing', () => {
+    submit();
+    submit({ name: '' });
+    expect(success().hidden).toBe(false);
+    expect(form().hidden).toBe(true);
+    expect(summary().hidden).toBe(true);
+  });
+
+  test('"Register another user" shows an empty, clean form again', () => {
+    const another = document.getElementById('register-another');
+    expect(another.hidden).toBe(true);
+    submit();
+    expect(another.hidden).toBe(false);
+    another.click();
+    expect(form().hidden).toBe(false);
+    expect(success().hidden).toBe(true);
+    expect(another.hidden).toBe(true);
+    expect(summary().hidden).toBe(true);
+    for (const id of Object.keys(VALID)) {
+      expect(document.getElementById(id).value).toBe('');
+      expect(document.getElementById(id).getAttribute('aria-invalid')).toBe('false');
+      expect(err(id).hidden).toBe(true);
+    }
+    expect(document.activeElement.id).toBe('name');
+  });
+
+  test('reset puts password fields back to hidden mode', () => {
+    document.querySelector('button[data-toggle="password"]').click();
+    submit();
+    document.getElementById('register-another').click();
+    const btn = document.querySelector('button[data-toggle="password"]');
+    expect(document.getElementById('password').type).toBe('password');
+    expect(btn.textContent).toBe('Show');
+    expect(btn.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  test('editing an invalid field clears only that fields error', () => {
+    submit({ name: '', email: 'nope' });
+    const name = document.getElementById('name');
+    name.value = 'Ana';
+    name.dispatchEvent(new Event('input'));
+    expect(err('name').hidden).toBe(true);
+    expect(name.getAttribute('aria-invalid')).toBe('false');
+    expect(err('email').hidden).toBe(false);
+    expect(summary().textContent).toBe('Please fix 1 field below');
+  });
+
+  test('summary hides once the last error is cleared by editing', () => {
+    submit({ name: '' });
+    const name = document.getElementById('name');
+    name.value = 'Ana';
+    name.dispatchEvent(new Event('input'));
+    expect(summary().hidden).toBe(true);
+  });
+
+  test('typing never creates new errors', () => {
+    const name = document.getElementById('name');
+    name.value = 'A';
+    name.dispatchEvent(new Event('input'));
+    expect(err('name').hidden).toBe(true);
+    expect(summary().hidden).toBe(true);
   });
 });

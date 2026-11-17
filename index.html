@@ -9,6 +9,7 @@
   <main>
     <h1>Register</h1>
     <form id="registration-form" novalidate>
+      <p id="error-summary" class="error" role="alert" hidden></p>
       <div>
         <label for="name">Name</label>
         <input id="name" name="name" type="text" autocomplete="name" aria-invalid="false">
@@ -49,6 +50,7 @@
       <button type="submit">Register</button>
     </form>
     <p id="success-message" role="status" hidden>You have been registered successfully.</p>
+    <button type="button" id="register-another" hidden>Register another user</button>
   </main>
   <script src="src/form.js"></script>
 </body>

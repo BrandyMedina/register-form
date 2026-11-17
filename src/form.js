@@ -65,50 +65,97 @@ function showError(doc, id, message) {
   else input.removeAttribute('aria-describedby');
 }
 
+// Field ids in form order, each with its validator. Order decides which field gets focus.
+function getFields(doc) {
+  const value = (id) => doc.getElementById(id).value;
+  return [
+    { id: 'name', validate: () => validateName(value('name')) },
+    { id: 'email', validate: () => validateEmail(value('email')) },
+    { id: 'password', validate: () => validatePassword(value('password')) },
+    {
+      id: 'confirm-password',
+      validate: (errors) => validateConfirmPassword(
+        value('password'), value('confirm-password'), errors.password
+      ),
+    },
+    { id: 'phone', validate: () => validatePhone(value('phone')) },
+    { id: 'address', validate: () => validateAddress(value('address')) },
+    { id: 'country', validate: () => validateCountry(value('country')) },
+  ];
+}
+
+function updateSummary(doc, fields) {
+  const summary = doc.getElementById('error-summary');
+  const count = fields.filter((f) => !doc.getElementById(`${f.id}-error`).hidden).length;
+  summary.textContent = count ? `Please fix ${count} field${count === 1 ? '' : 's'} below` : '';
+  summary.hidden = count === 0;
+}
+
 function initForm(doc) {
   const form = doc.getElementById('registration-form');
   const success = doc.getElementById('success-message');
+  const another = doc.getElementById('register-another');
+  const fields = getFields(doc);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    if (form.hidden) return; // already registered: ignore double submit
 
-    const nameError = validateName(doc.getElementById('name').value);
-    const emailError = validateEmail(doc.getElementById('email').value);
-    const password = doc.getElementById('password').value;
-    const passwordError = validatePassword(password);
-    const confirmError = validateConfirmPassword(
-      password,
-      doc.getElementById('confirm-password').value,
-      passwordError
-    );
+    const errors = {};
+    for (const field of fields) {
+      errors[field.id] = field.validate(errors);
+      showError(doc, field.id, errors[field.id]);
+    }
+    updateSummary(doc, fields);
 
-    const phoneError = validatePhone(doc.getElementById('phone').value);
-    const addressError = validateAddress(doc.getElementById('address').value);
-    const countryError = validateCountry(doc.getElementById('country').value);
+    const firstInvalid = fields.find((f) => errors[f.id]);
+    if (firstInvalid) {
+      doc.getElementById(firstInvalid.id).focus();
+      success.hidden = true;
+      return;
+    }
 
-    showError(doc, 'name', nameError);
-    showError(doc, 'email', emailError);
-    showError(doc, 'password', passwordError);
-    showError(doc, 'confirm-password', confirmError);
-    showError(doc, 'phone', phoneError);
-    showError(doc, 'address', addressError);
-    showError(doc, 'country', countryError);
-
-    success.hidden = Boolean(
-      nameError || emailError || passwordError || confirmError ||
-      phoneError || addressError || countryError
-    );
+    doc.getElementById('password').value = '';
+    doc.getElementById('confirm-password').value = '';
+    form.hidden = true;
+    success.hidden = false;
+    another.hidden = false;
   });
+
+  // Typing can clear an existing error but never creates one.
+  for (const field of fields) {
+    doc.getElementById(field.id).addEventListener('input', () => {
+      if (doc.getElementById(`${field.id}-error`).hidden) return;
+      showError(doc, field.id, '');
+      updateSummary(doc, fields);
+    });
+  }
 
   doc.querySelectorAll('button[data-toggle]').forEach((button) => {
     button.addEventListener('click', () => {
       const input = doc.getElementById(button.dataset.toggle);
-      const reveal = input.type === 'password';
-      input.type = reveal ? 'text' : 'password';
-      button.textContent = reveal ? 'Hide' : 'Show';
-      button.setAttribute('aria-pressed', String(reveal));
+      setPasswordVisible(input, button, input.type === 'password');
     });
   });
+
+  another.addEventListener('click', () => {
+    form.reset();
+    for (const field of fields) showError(doc, field.id, '');
+    updateSummary(doc, fields);
+    doc.querySelectorAll('button[data-toggle]').forEach((button) => {
+      setPasswordVisible(doc.getElementById(button.dataset.toggle), button, false);
+    });
+    success.hidden = true;
+    another.hidden = true;
+    form.hidden = false;
+    doc.getElementById('name').focus();
+  });
+}
+
+function setPasswordVisible(input, button, visible) {
+  input.type = visible ? 'text' : 'password';
+  button.textContent = visible ? 'Hide' : 'Show';
+  button.setAttribute('aria-pressed', String(visible));
 }
 
 if (typeof module !== 'undefined' && module.exports) {
