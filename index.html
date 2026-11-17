@@ -4,54 +4,64 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>User Registration</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-    <h1>Register</h1>
+  <main class="card">
+    <div class="card-header">
+      <h1>Register</h1>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false">Dark mode</button>
+    </div>
+    <!-- Native browser validation is off on purpose: we show our own messages. -->
     <form id="registration-form" novalidate>
-      <p id="error-summary" class="error" role="alert" hidden></p>
-      <div>
-        <label for="name">Name</label>
-        <input id="name" name="name" type="text" autocomplete="name" aria-invalid="false">
+      <p id="error-summary" class="error summary" role="alert" hidden></p>
+      <div class="field">
+        <label for="name">Name (required)</label>
+        <input id="name" name="name" type="text" autocomplete="name" required aria-required="true" aria-invalid="false">
         <p id="name-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email" aria-invalid="false">
+      <div class="field">
+        <label for="email">Email (required)</label>
+        <input id="email" name="email" type="email" autocomplete="email" required aria-required="true" aria-invalid="false">
         <p id="email-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
-        <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="new-password" aria-invalid="false">
-        <button type="button" data-toggle="password" aria-pressed="false">Show</button>
+      <div class="field">
+        <label for="password">Password (required)</label>
+        <div class="password-row">
+          <input id="password" name="password" type="password" autocomplete="new-password" required aria-required="true" aria-invalid="false">
+          <button type="button" data-toggle="password" data-name="password" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
         <p id="password-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
-        <label for="confirm-password">Confirm password</label>
-        <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" aria-invalid="false">
-        <button type="button" data-toggle="confirm-password" aria-pressed="false">Show</button>
+      <div class="field">
+        <label for="confirm-password">Confirm password (required)</label>
+        <div class="password-row">
+          <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required aria-required="true" aria-invalid="false">
+          <button type="button" data-toggle="confirm-password" data-name="confirm password" aria-label="Show confirm password" aria-pressed="false">Show</button>
+        </div>
         <p id="confirm-password-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
+      <div class="field">
         <label for="phone">Phone (optional)</label>
         <input id="phone" name="phone" type="tel" autocomplete="tel" aria-invalid="false">
         <p id="phone-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
-        <label for="address">Address</label>
-        <input id="address" name="address" type="text" autocomplete="street-address" aria-invalid="false">
+      <div class="field">
+        <label for="address">Address (required)</label>
+        <input id="address" name="address" type="text" autocomplete="street-address" required aria-required="true" aria-invalid="false">
         <p id="address-error" class="error" role="alert" hidden></p>
       </div>
-      <div>
-        <label for="country">Country</label>
-        <input id="country" name="country" type="text" autocomplete="country-name" aria-invalid="false">
+      <div class="field">
+        <label for="country">Country (required)</label>
+        <input id="country" name="country" type="text" autocomplete="country-name" required aria-required="true" aria-invalid="false">
         <p id="country-error" class="error" role="alert" hidden></p>
       </div>
-      <button type="submit">Register</button>
+      <button type="submit" class="primary">Register</button>
     </form>
-    <p id="success-message" role="status" hidden>You have been registered successfully.</p>
+    <p id="success-message" class="success" role="status" hidden>You have been registered successfully.</p>
     <button type="button" id="register-another" hidden>Register another user</button>
   </main>
+  <script src="src/theme.js"></script>
   <script src="src/form.js"></script>
 </body>
 </html>

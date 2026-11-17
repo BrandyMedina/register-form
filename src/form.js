@@ -155,6 +155,7 @@ function initForm(doc) {
 function setPasswordVisible(input, button, visible) {
   input.type = visible ? 'text' : 'password';
   button.textContent = visible ? 'Hide' : 'Show';
+  button.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} ${button.dataset.name}`);
   button.setAttribute('aria-pressed', String(visible));
 }
 
