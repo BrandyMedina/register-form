@@ -173,6 +173,19 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.summary p {
+  margin: 0;
+}
+
+.summary p + p {
+  margin-top: 4px;
+}
+
+.summary a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .success {
   margin: 0 0 16px;
   padding: 16px;

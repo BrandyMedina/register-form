@@ -338,13 +338,13 @@ describe('Story 5: submit experience', () => {
   });
 
   test('summary shows the number of invalid fields (plural)', () => {
-    submit({ name: '', email: 'nope', address: '' });
+    submit({ name: 'A', email: 'nope', phone: 'abc' });
     expect(summary().hidden).toBe(false);
     expect(summary().textContent).toBe('Please fix 3 fields below');
   });
 
   test('summary uses singular for one invalid field', () => {
-    submit({ country: '' });
+    submit({ country: 'X' });
     expect(summary().textContent).toBe('Please fix 1 field below');
   });
 

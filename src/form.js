@@ -84,11 +84,58 @@ function getFields(doc) {
   ];
 }
 
+const plural = (n) => (n === 1 ? 'field' : 'fields');
+
+function isRequired(doc, id) {
+  return doc.getElementById(id).required;
+}
+
+function isEmpty(doc, id) {
+  return doc.getElementById(id).value.trim() === '';
+}
+
+// "Name (required)" -> "Name"
+function labelName(doc, id) {
+  return doc.querySelector(`label[for="${id}"]`).textContent.replace(/\s*\(.*\)\s*$/, '');
+}
+
+function buildRequiredLine(doc, ids) {
+  const line = doc.createElement('p');
+  line.className = 'summary-required';
+  line.append('Required: ');
+  ids.forEach((id, i) => {
+    if (i > 0) line.append(', ');
+    const link = doc.createElement('a');
+    link.href = `#${id}`;
+    link.textContent = labelName(doc, id);
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      doc.getElementById(id).focus();
+    });
+    line.append(link);
+  });
+  return line;
+}
+
+// Rebuilds the summary from the errors currently shown: empty required fields are
+// listed by name (as links); every other error is only counted.
 function updateSummary(doc, fields) {
   const summary = doc.getElementById('error-summary');
-  const count = fields.filter((f) => !doc.getElementById(`${f.id}-error`).hidden).length;
-  summary.textContent = count ? `Please fix ${count} field${count === 1 ? '' : 's'} below` : '';
-  summary.hidden = count === 0;
+  const shown = fields.filter((f) => !doc.getElementById(`${f.id}-error`).hidden);
+  const missing = shown.filter((f) => isRequired(doc, f.id) && isEmpty(doc, f.id));
+  const otherCount = shown.length - missing.length;
+
+  summary.replaceChildren();
+  if (missing.length) summary.append(buildRequiredLine(doc, missing.map((f) => f.id)));
+  if (otherCount) {
+    const other = doc.createElement('p');
+    other.className = 'summary-other';
+    other.textContent = missing.length
+      ? `Please fix ${otherCount} more ${plural(otherCount)} below`
+      : `Please fix ${otherCount} ${plural(otherCount)} below`;
+    summary.append(other);
+  }
+  summary.hidden = shown.length === 0;
 }
 
 function initForm(doc) {
@@ -122,12 +169,25 @@ function initForm(doc) {
     another.hidden = false;
   });
 
-  // Typing can clear an existing error but never creates one.
+  const summary = doc.getElementById('error-summary');
   for (const field of fields) {
-    doc.getElementById(field.id).addEventListener('input', () => {
+    const input = doc.getElementById(field.id);
+
+    // Typing can clear an existing error but never creates one. The summary is only
+    // refreshed if it is already showing (it appears on submit, not while typing).
+    input.addEventListener('input', () => {
       if (doc.getElementById(`${field.id}-error`).hidden) return;
       showError(doc, field.id, '');
-      updateSummary(doc, fields);
+      if (!summary.hidden) updateSummary(doc, fields);
+    });
+
+    // Leaving an empty required field warns right away. Only the "empty" check runs
+    // here; format and length errors still wait for submit.
+    input.addEventListener('blur', (event) => {
+      if (form.hidden || !isRequired(doc, field.id) || !isEmpty(doc, field.id)) return;
+      const toggle = doc.querySelector(`button[data-toggle="${field.id}"]`);
+      if (toggle && event.relatedTarget === toggle) return; // heading to its Show button
+      showError(doc, field.id, field.validate({}));
     });
   }
 
